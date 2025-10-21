@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
+using System.Reflection;
 using System.Security.Claims;
 using System.Text;
 
@@ -22,20 +23,19 @@ namespace AuthorizationDemo.Controllers
         public IActionResult Login([FromBody] LoginModel model)
         {
             // Validate the user (you can validate from DB or other method)
-            if (model.Username == "test" && model.Password == "password") // Example
+            if (model.Username == "test" && model.Password == "123") // Example
             {
-                var token = GenerateToken();
-                return Ok(new { Token = token });
+                return Unauthorized();
             }
-
-            return Unauthorized();
+            var token = GenerateToken(model.Username);
+            return Ok(new { Token = token });
         }
 
-        private string GenerateToken()
+        private string GenerateToken(string userName)
         {
             var claims = new[]
             {
-            new Claim(ClaimTypes.Name, "test"), // Add claims as needed
+            new Claim(ClaimTypes.Name, userName), // Add claims as needed
         };
 
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("OTUSSignalRDemoFirstKeyOTUSSignalRDemoFirstKey"));

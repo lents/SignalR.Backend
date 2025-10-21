@@ -3,106 +3,39 @@ import * as signalR from '@microsoft/signalr';
 
 function App() {
     const [chatConnection, setChatConnection] = useState(null);
-    const [notificationConnection, setNotificationConnection] = useState(null);
     const [messages, setMessages] = useState([]);
-    const [notifications, setNotifications] = useState([]); // State for notifications
     const [input, setInput] = useState("");
     const [group, setGroup] = useState("");
-    const [token, setToken] = useState(""); 
-    // Fetch the token from an API
-    const fetchToken = async () => {
-        const response = await fetch('https://localhost:7246/api/auth/login', {
-            method: 'POST',
-            body: JSON.stringify({ username: 'test', password: 'password' }),
-            headers: {
-                'Content-Type': 'application/json',
-            },
-        });
-
-        const data = await response.json();
-        setToken(data.token); // Store the token
-    };
-    const getUserIdFromToken = () => {
-        const token = localStorage.getItem("access_token");
-        if (!token) return null;
+       
     
-        // Decode the JWT to get the userId
-        const payload = JSON.parse(atob(token.split('.')[1]));
-        return payload.sub; // Adjust according to your JWT structure
-    };
+    //Initialize chat connection
     useEffect(() => {
-        // Fetch token when the component mounts
-        fetchToken();
-    }, []);
-    useEffect(() => {
-        if (token) {
-            const newConnection = new signalR.HubConnectionBuilder()
-                .withUrl("https://localhost:7246/chatHub", {
-                    accessTokenFactory: () => token, // Use the token here
-                })
-                .withAutomaticReconnect()
-                .configureLogging(signalR.LogLevel.Information)
-                .build();
-
-                setChatConnection(newConnection);
-        }
-    }, [token]);
-    // // Initialize chat connection
-    // useEffect(() => {
-    //     const newChatConnection = new signalR.HubConnectionBuilder()
-    //         .withUrl("http://localhost:5049/chatHub") // Chat Hub URL
-    //         .withAutomaticReconnect()
-    //         .configureLogging(signalR.LogLevel.Information)
-    //         .build();
-
-    //     setChatConnection(newChatConnection);
-    // }, []);
-
-    // Initialize notification connection
-    useEffect(() => {
-        const newNotificationConnection = new signalR.HubConnectionBuilder()
-            .withUrl("https://localhost:7252/notificationHub") // , {
-            //     accessTokenFactory: () => token
-            // }
+        const newChatConnection = new signalR.HubConnectionBuilder()
+            .withUrl("http://localhost:5049/chatHub") // Chat Hub URL
             .withAutomaticReconnect()
             .configureLogging(signalR.LogLevel.Information)
             .build();
 
-        setNotificationConnection(newNotificationConnection);
+        setChatConnection(newChatConnection);
     }, []);
 
-    // Start chat connection and set up message handler
-    useEffect(() => {
+  
+   
+
+     //Start chat connection and set up message handler
+     useEffect(() => {
         if (chatConnection) {
             chatConnection.start()
-                .then(() => {
-                    console.log("Connected to Chat Hub!");
-                    // Load user-specific chat history
-                    chatConnection.on("LoadHistory", (history) => {
-                        setMessages(history);
-                    });
+                .then(() => {                    
                     chatConnection.on("ReceiveMessage", (user, message) => {
-                        setMessages(messages => [...messages, `${user}: ${message}`]);
-                    });
+                                             setMessages(messages => [...messages, `${user}: ${message}`]);
+                                        });
                 })
                 .catch(e => console.log("Chat Connection failed: ", e));
         }
     }, [chatConnection]);
 
-    // Start notification connection and set up notification handler
-    useEffect(() => {
-        if (notificationConnection) {
-            notificationConnection.start()
-                .then(() => {
-                    console.log("Connected to Notification Hub!");
-
-                    notificationConnection.on("ReceiveNotification", (notification) => {
-                        setNotifications(notifications => [...notifications, notification]);
-                    });
-                })
-                .catch(e => console.log("Notification Connection failed: ", e));
-        }
-    }, [notificationConnection]);
+ 
 
     const sendMessage = async () => {
         if (chatConnection._connectionStarted) {
@@ -178,14 +111,7 @@ function App() {
                 </ul>
             </div>
 
-            <div>
-                <h3>Notifications:</h3>
-                <ul>
-                    {notifications.map((notification, index) => (
-                        <li key={index}>{notification}</li>
-                    ))}
-                </ul>
-            </div>
+           
         </div>
     );
 }

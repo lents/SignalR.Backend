@@ -44,24 +44,25 @@ namespace AuthorizationDemo
                     ValidIssuer = "yourIssuer",
                     ValidAudience = "yourAudience"
                 };
-
-                // Enable SignalR to use the access token
+                // This is crucial for SignalR to read the token from the query string
                 options.Events = new JwtBearerEvents
                 {
                     OnMessageReceived = context =>
                     {
                         var accessToken = context.Request.Query["access_token"];
 
-                        // If the request is for the hub, attach the token
+                        // If the request is for our Hub...
                         var path = context.HttpContext.Request.Path;
                         if (!string.IsNullOrEmpty(accessToken) &&
-                            (path.StartsWithSegments("/notificationHub")))
+                            path.StartsWithSegments("/chatHub"))
                         {
+                            // Read the token out of the query string
                             context.Token = accessToken;
                         }
                         return Task.CompletedTask;
                     }
                 };
+
             });
 
             builder.Services.AddAuthorization();
